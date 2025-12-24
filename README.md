@@ -42,6 +42,17 @@ The tool performs the following steps:
 
 ## Usage
 
+---
+
+## Pre-run checklist
+
+Before running the script, make sure that:
+
+1. You are connected to Exchange Online PowerShell:
+   ```powershell
+   Connect-ExchangeOnline
+
+
 ### Dry-run (required step)
 
 ```powershell

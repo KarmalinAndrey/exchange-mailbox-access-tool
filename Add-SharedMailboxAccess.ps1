@@ -10,6 +10,19 @@ param (
     [switch]$Apply
 )
 
+$LogDir = ".\logs"
+$LogFile = "$LogDir\mailbox-access.log"
+
+if (-not (Test-Path $LogDir)) {
+    New-Item -ItemType Directory -Path $LogDir | Out-Null
+}
+
+function Write-Log($message) {
+    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    "$timestamp | $message" | Out-File -FilePath $LogFile -Append
+}
+
+
 function Fail($msg) {
     Write-Error "[ERROR] $msg"
     exit 1
@@ -28,10 +41,15 @@ if ($Apply -and -not $DryRun) {
 # --- VALIDATION ---
 
 Write-Host "[INFO] Checking mailbox..."
+if (-not (Get-Command Get-Mailbox -ErrorAction SilentlyContinue)) {
+    Fail "Not connected to Exchange Online. Run Connect-ExchangeOnline first."
+}
 $mailboxObj = Get-Mailbox -Identity $Mailbox -ErrorAction SilentlyContinue
 if (-not $mailboxObj) {
     Fail "Shared mailbox '$Mailbox' not found"
 }
+Write-Log "Checked mailbox '$Mailbox' and user '$User'"
+
 
 Write-Host "[INFO] Checking user..."
 $userObj = Get-Recipient -Identity $User -ErrorAction SilentlyContinue
@@ -75,6 +93,7 @@ if ($DryRun) {
     Write-Host "[DRY-RUN] No changes were made."
     exit 0
 }
+Write-Log "DRY-RUN for mailbox '$Mailbox' user '$User'"
 
 # --- APPLY MODE WITH CONFIRMATION ---
 
@@ -99,7 +118,7 @@ if ($confirmation -ne "yes") {
 }
 
 # --- APPLY CHANGES ---
-
+Write-Log "APPLY permissions for mailbox '$Mailbox' user '$User'"
 if (-not $hasFullAccess) {
     Write-Host "[INFO] Granting FullAccess..."
     Add-MailboxPermission `
@@ -122,3 +141,4 @@ if (-not $hasSendAs) {
 }
 
 Write-Host "[SUCCESS] Missing permissions granted successfully"
+Write-Log "Completed successfully"
