@@ -52,7 +52,6 @@ Before running the script, make sure that:
    ```powershell
    Connect-ExchangeOnline
 
-
 ### Dry-run (required step)
 
 ```powershell
